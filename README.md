@@ -205,27 +205,24 @@ Spam protection: a hidden honeypot field, a signed render-time token (rejects in
 
 ## Deploying to Vercel
 
-1. Push this repository to GitHub and **Import** it in Vercel (the framework is detected as Next.js).
-2. Create a Neon database (or use Vercel's Neon integration) and copy the **pooled** connection string into `DATABASE_URL`.
-3. Add the other environment variables (see `.env.example`). Set `NEXT_PUBLIC_SITE_URL` to your final domain.
-4. Run the migrations and seed **from your computer** against the production database:
+The `vercel-build` script runs `scripts/deploy-setup.ts` before each build. It applies database migrations, adds the starter projects (only when the database has no projects at all), and creates the first administrator from `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD`. The administrator is created only while none exists. No terminal is needed.
 
-```bash
-DATABASE_URL="<prod>" npm run db:migrate
-```
+1. In Vercel, **Add New → Project** and import this GitHub repository (Vercel detects Next.js).
+2. Before deploying, open **Environment Variables** and add:
+   - `AUTH_SECRET`: a random string of 32+ characters (generate one in a password manager)
+   - `ADMIN_BOOTSTRAP_EMAIL`: your sign-in email
+   - `ADMIN_BOOTSTRAP_PASSWORD`: a strong password of 12+ characters
+3. Deploy. The first build **stops with a clear message** because no database is connected yet.
+4. In the project, open **Storage → Create Database → Neon (Postgres)** and connect it to this project. This adds `DATABASE_URL` automatically.
+5. **Deployments → ⋯ → Redeploy.** The build log should show "Database migrations applied", "5 project(s) added" and "Administrator … created".
+6. Visit `/admin/login` and sign in. Then **delete `ADMIN_BOOTSTRAP_PASSWORD`** from Vercel's environment variables.
+7. Optional: add your domain under **Settings → Domains** and set `NEXT_PUBLIC_SITE_URL` to it. Without it, the site uses the `*.vercel.app` production address.
 
-```bash
-DATABASE_URL="<prod>" npm run db:seed
-```
+Until R2 storage is configured (see "Media storage setup"), the live dashboard can edit, publish and reorder projects and use the media library, but **uploading new files will show a "storage is not configured" message.** Add the `S3_*` variables and `STORAGE_DRIVER=s3`, then redeploy.
 
-```bash
-DATABASE_URL="<prod>" npm run admin:create -- --email you@yourdomain.com
-```
+The five starter videos (about 44 MB) live in `public/media/` and are served from Vercel's CDN. New uploads go to R2.
 
-5. Deploy, then add your domain in Vercel → Domains.
-6. Open `/admin/login`, sign in, and check that a test upload works. That confirms the R2 credentials and CORS.
-
-The five seed videos (about 44 MB) live in `public/media/` and are served from Vercel's CDN with long cache headers. Anything you upload later goes to R2.
+You can also run the setup from a terminal: `DATABASE_URL="<prod>" AUTH_SECRET="…" npm run deploy:setup`, or use `npm run admin:create` to add or reset an administrator.
 
 ---
 

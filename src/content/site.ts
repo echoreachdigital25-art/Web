@@ -4,7 +4,10 @@ export const site = {
   tagline: "Make Your Brand Impossible to Ignore.",
   description:
     "We create compelling visual experiences, build powerful digital platforms and implement intelligent marketing solutions that help ambitious brands stand out and grow.",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
+  url: (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")
+  ).replace(/\/$/, ""),
   email: "flowsyncdigital@gmail.com",
   whatsapp: { display: "+234 915 161 0452", href: "https://wa.me/2349151610452" },
   instagram: { handle: "@kynde_motion", href: "https://www.instagram.com/kynde_motion/" },
